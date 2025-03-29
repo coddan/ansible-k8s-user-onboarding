@@ -1,0 +1,10 @@
+all:
+  children:
+    clusters:
+      hosts:
+        cluster1:
+          ansible_host: 192.168.1.227
+    bastion_hosts:
+      hosts:
+       bastion1:
+         ansible_host: 192.168.1.227

@@ -1,0 +1,21 @@
+---
+# vars file for onboard_k8s_users
+clusters:
+- name: cluster1
+  kubeconfig_path: /home/osser/.kube/config
+  users:
+  - username: "user1"
+    group: "devs"
+    namespaces:
+    - "namespace1"
+    - "namespace2"
+    permissions:
+    - '{"pods": ["get", "list", "create", "delete"]}'
+    - '{"deployments": ["get", "list", "create", "update"]}'
+
+  - username: "user2"
+    group: "admins"
+    namespaces:
+    - "namespace2"
+    permissions:
+    - '{"deployments": ["get", "list", "create", "update"]}'

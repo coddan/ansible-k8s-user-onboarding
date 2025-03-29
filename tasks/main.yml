@@ -1,0 +1,41 @@
+---
+- name: Copy python script to controllers
+  ansible.builtin.copy:
+    src: user_onboarding_k8s.py
+    dest: /tmp/
+
+- name: Ensure the final kubeconfigs directory exists
+  ansible.builtin.file:
+    path: /tmp/final-kubeconfigs
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Provision users and their configurations on clusters
+  ansible.builtin.include_tasks: python_script.yml
+  loop: "{{ clusters }}"
+  loop_control:
+    loop_var: cluster
+  vars:
+    kubeconfig_path: "{{ cluster.kubeconfig_path }}"
+    users: "{{ cluster.users }}"
+
+- name: Fetch kubeconfig for each user from the cluster
+  ansible.builtin.fetch:
+    src: "/tmp/certs/{{ item.username }}/kubeconfig"
+    dest: "/tmp/kubeconfigs/{{ item.username }}-{{ inventory_hostname }}.conf"
+    flat: yes
+  loop: "{{ clusters | selectattr('name', 'equalto', inventory_hostname) | map(attribute='users') | first }}"
+
+- name: Merge kubeconfigs for each user
+  ansible.builtin.shell: |
+    export KUBECONFIG=$(find /tmp/kubeconfigs -name '{{ user.username }}-*.conf' | tr '\n' ':')
+    kubectl config view --merge --flatten > /tmp/final-kubeconfigs/{{ user.username }}.conf
+  loop: "{{ clusters | map(attribute='users') | list | flatten }}"
+  loop_control:
+    loop_var: user
+  delegate_to: localhost
+
+- name: Copy merged kubeconfigs to users
+  ansible.builtin.include_tasks: copy_kubeconf.yml
+  loop: "{{ groups['bastion_hosts'] }}"

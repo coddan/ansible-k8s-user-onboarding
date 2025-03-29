@@ -1,0 +1,13 @@
+- name: Run Python script to create user in Kubernetes with custom permissions
+  ansible.builtin.shell:
+    cmd: python3 /tmp/user_onboarding_k8s.py
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+    USERNAME: "{{ user.username }}"
+    GROUP: "{{ user.group }}"
+    NAMESPACES: "{{ user.namespaces | join(',') }}"
+    PERMISSIONS: "{{ user.permissions | to_json }}"
+  loop: "{{ users }}"
+  loop_control:
+    loop_var: user
+  delegate_to: "192.168.1.227"

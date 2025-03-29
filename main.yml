@@ -1,0 +1,6 @@
+---
+- name: Setup Kubernetes Users with Custom Permissions and Provision Configurations
+  hosts: "{{ clusters | map(attribute='name') | list }}"
+  gather_facts: no
+  roles:
+    - onboard_k8s_users

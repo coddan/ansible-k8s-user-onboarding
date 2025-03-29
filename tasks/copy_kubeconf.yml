@@ -1,0 +1,22 @@
+- name: create kube folder
+  file:
+    path: "/home/{{ user.username }}/.kube/"
+    state: directory
+    owner: "{{ user.username }}"
+    group: "{{ user.username }}"
+  loop: "{{ clusters | map(attribute='users') | list | flatten }}"
+  loop_control:
+    loop_var: user
+  become: true
+
+- name: Copy merged kubeconfig to user’s home folder
+  ansible.builtin.copy:
+    src: "/tmp/final-kubeconfigs/{{ user.username }}.conf"
+    dest: "/home/{{ user.username }}/.kube/config"
+    owner: "{{ user.username }}"
+    group: "{{ user.username }}"
+    mode: '0600'
+  loop: "{{ clusters | map(attribute='users') | list | flatten }}"
+  loop_control:
+    loop_var: user
+  become: true
