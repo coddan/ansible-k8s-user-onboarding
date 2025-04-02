@@ -4,9 +4,13 @@
     state: directory
     owner: "{{ user.username }}"
     group: "{{ user.username }}"
-  loop: "{{ clusters | map(attribute='users') | list | flatten }}"
+  delegate_to: "{{ bastion }}" 
+  loop: "{{ clusters | map(attribute='users') | list | flatten }} | product(groups['bastion_hosts']) |list"
   loop_control:
-    loop_var: user
+    loop_var: user_bastion
+  vars:
+    user: "{{ user_bastion[0] }}"
+    bastion: "{{ user_bastion[1] }}"
   become: true
 
 - name: Copy merged kubeconfig to user’s home folder
@@ -16,7 +20,11 @@
     owner: "{{ user.username }}"
     group: "{{ user.username }}"
     mode: '0600'
-  loop: "{{ clusters | map(attribute='users') | list | flatten }}"
+  delegate_to: "{{ bastion }}" 
+  loop: "{{ clusters | map(attribute='users') | list | flatten }} | product(groups['bastion_hosts']) |list"
   loop_control:
-    loop_var: user
+    loop_var: user_bastion
+  vars:
+    user: "{{ user_bastion[0] }}"
+    bastion: "{{ user_bastion[1] }}"
   become: true
